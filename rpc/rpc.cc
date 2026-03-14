@@ -71,7 +71,7 @@
 #include <netdb.h>
 
 #include "jsl_log.h"
-#include "gettime.h"
+// #include "gettime.h"
 
 const rpcc::TO rpcc::to_max = {120000};
 const rpcc::TO rpcc::to_min = {1000};
@@ -124,7 +124,7 @@ rpcc::rpcc(sockaddr_in d, bool retrans) : dst_(d), srv_nonce_(0), bind_done_(fal
 	// xid starts with 1 and latest received reply starts with 0
 	xid_rep_window_.push_back(0);
 
-	jsl_log(JSL_DBG_2, "rpcc::rpcc cltn_nonce is %d lossy %d\n",
+	jsl_log(dbcode::JSL_DBG_2, "rpcc::rpcc cltn_nonce is %d lossy %d\n",
 			clt_nonce_, lossytest_);
 }
 
@@ -132,7 +132,7 @@ rpcc::rpcc(sockaddr_in d, bool retrans) : dst_(d), srv_nonce_(0), bind_done_(fal
 // are blocked inside rpcc or will use rpcc in the future
 rpcc::~rpcc()
 {
-	jsl_log(JSL_DBG_2, "rpcc::~rpcc delete nonce %d channo=%d\n",
+	jsl_log(dbcode::JSL_DBG_2, "rpcc::~rpcc delete nonce %d channo=%d\n",
 			clt_nonce_, chan_ ? chan_->channo() : -1);
 	if (chan_)
 	{
@@ -156,7 +156,7 @@ int rpcc::bind(TO to)
 	}
 	else
 	{
-		jsl_log(JSL_DBG_2, "rpcc::bind %s failed %d\n",
+		jsl_log(dbcode::JSL_DBG_2, "rpcc::bind %s failed %d\n",
 				inet_ntoa(dst_.sin_addr), ret);
 	}
 	return ret;
@@ -173,7 +173,7 @@ int rpcc::call1(unsigned int proc, marshall &req, unmarshall &rep,
 		if ((proc != rpc_const::bind && !bind_done_) ||
 			(proc == rpc_const::bind && bind_done_))
 		{
-			jsl_log(JSL_DBG_1, "rpcc::call1 rpcc has not been bound to dst or binding twice\n");
+			jsl_log(dbcode::JSL_DBG_1, "rpcc::call1 rpcc has not been bound to dst or binding twice\n");
 			return rpc_const::bind_failure;
 		}
 
@@ -203,7 +203,7 @@ int rpcc::call1(unsigned int proc, marshall &req, unmarshall &rep,
 			if (ch)
 			{
 				ch->send(req.cstr(), req.size());
-				jsl_log(JSL_DBG_2,
+				jsl_log(dbcode::JSL_DBG_2,
 						"rpcc::call1 %u just sent req proc %x xid %u clt_nonce %d\n",
 						clt_nonce_, proc, ca.xid, clt_nonce_);
 			}
@@ -251,7 +251,7 @@ int rpcc::call1(unsigned int proc, marshall &req, unmarshall &rep,
 
 	ScopedLock cal(&ca.m);
 
-	jsl_log(JSL_DBG_2,
+	jsl_log(dbcode::JSL_DBG_2,
 			"rpcc::call1 %u wait over for req proc %x xid %u %s:%d done? %d ret %d \n",
 			clt_nonce_, proc, ca.xid, inet_ntoa(dst_.sin_addr),
 			ntohs(dst_.sin_port), ca.done, ca.intret);
@@ -296,7 +296,7 @@ bool rpcc::got_pdu(connection *c, char *b, int sz)
 
 	if (!rep.ok())
 	{
-		jsl_log(JSL_DBG_1, "rpcc:got_pdu unmarshall header failed!!!\n");
+		jsl_log(dbcode::JSL_DBG_1, "rpcc:got_pdu unmarshall header failed!!!\n");
 		return true;
 	}
 
@@ -306,7 +306,7 @@ bool rpcc::got_pdu(connection *c, char *b, int sz)
 
 	if (calls_.find(h.xid) == calls_.end())
 	{
-		jsl_log(JSL_DBG_2, "rpcc::got_pdu xid %d no pending request\n", h.xid);
+		jsl_log(dbcode::JSL_DBG_2, "rpcc::got_pdu xid %d no pending request\n", h.xid);
 		return true;
 	}
 	caller *ca = calls_[h.xid];
@@ -318,7 +318,7 @@ bool rpcc::got_pdu(connection *c, char *b, int sz)
 		ca->intret = h.ret;
 		if (ca->intret < 0)
 		{
-			jsl_log(JSL_DBG_2, "rpcc::got_pdu: RPC reply error for xid %d intret %d\n",
+			jsl_log(dbcode::JSL_DBG_2, "rpcc::got_pdu: RPC reply error for xid %d intret %d\n",
 					h.xid, ca->intret);
 		}
 		ca->done = 1;
@@ -366,7 +366,7 @@ rpcs::rpcs(unsigned int p1, int count)
 
 	set_rand_seed();
 	nonce_ = random();
-	jsl_log(JSL_DBG_2, "rpcs::rpcs created with nonce %d\n", nonce_);
+	jsl_log(dbcode::JSL_DBG_2, "rpcs::rpcs created with nonce %d\n", nonce_);
 
 	char *loss_env = getenv("RPC_LOSSY");
 	if (loss_env != NULL)
@@ -419,7 +419,7 @@ void rpcs::updatestat(unsigned int proc)
 		std::map<int, int>::iterator i;
 		for (i = counts_.begin(); i != counts_.end(); i++)
 		{
-			jsl_log(JSL_DBG_1, "RPC STATS: %x %d\n", i->first, i->second);
+			jsl_log(dbcode::JSL_DBG_1, "RPC STATS: %x %d\n", i->first, i->second);
 		}
 		ScopedLock rwl(&reply_window_m_);
 		std::map<unsigned int, std::list<reply_t>>::iterator clt;
@@ -431,7 +431,7 @@ void rpcs::updatestat(unsigned int proc)
 			if (clt->second.size() > maxrep)
 				maxrep = clt->second.size();
 		}
-		jsl_log(JSL_DBG_1, "REPLY WINDOW: clients %ld total reply %d max per client %d\n",
+		jsl_log(dbcode::JSL_DBG_1, "REPLY WINDOW: clients %ld total reply %d max per client %d\n",
 				reply_window_.size(), totalrep, maxrep);
 		curr_counts_ = counting_;
 	}
@@ -449,12 +449,12 @@ void rpcs::dispatch(djob_t *j)
 
 	if (!req.ok())
 	{
-		jsl_log(JSL_DBG_1, "rpcs:dispatch unmarshall header failed!!!\n");
+		jsl_log(dbcode::JSL_DBG_1, "rpcs:dispatch unmarshall header failed!!!\n");
 		c->decref();
 		return;
 	}
 
-	jsl_log(JSL_DBG_2,
+	jsl_log(dbcode::JSL_DBG_2,
 			"rpcs::dispatch: rpc %u (proc %x, last_rep %u) from clt %u for srv instance %u \n",
 			h.xid, proc, h.xid_rep, h.clt_nonce, h.srv_nonce);
 
@@ -464,7 +464,7 @@ void rpcs::dispatch(djob_t *j)
 	// is client sending to an old instance of server?
 	if (h.srv_nonce != 0 && h.srv_nonce != nonce_)
 	{
-		jsl_log(JSL_DBG_2,
+		jsl_log(dbcode::JSL_DBG_2,
 				"rpcs::dispatch: rpc for an old server instance %u (current %u) proc %x\n",
 				h.srv_nonce, nonce_, h.proc);
 		rh.ret = rpc_const::oldsrv_failure;
@@ -479,7 +479,7 @@ void rpcs::dispatch(djob_t *j)
 		ScopedLock pl(&procs_m_);
 		if (procs_.count(proc) < 1)
 		{
-			jsl_log(JSL_DBG_2, "rpcs::dispatch: bad proc %x procs.count %u\n",
+			jsl_log(dbcode::JSL_DBG_2, "rpcs::dispatch: bad proc %x procs.count %u\n",
 					proc, (unsigned)procs_.count(proc));
 			c->decref();
 			return;
@@ -501,7 +501,7 @@ void rpcs::dispatch(djob_t *j)
 			if (reply_window_.find(h.clt_nonce) == reply_window_.end())
 			{
 				assert(reply_window_[h.clt_nonce].size() == 0); // create
-				jsl_log(JSL_DBG_2,
+				jsl_log(dbcode::JSL_DBG_2,
 						"rpcs::dispatch: new client %u xid %d chan %d, total clients %d\n",
 						h.clt_nonce, h.xid, c->channo(), (int)reply_window_.size());
 			}
@@ -524,7 +524,7 @@ void rpcs::dispatch(djob_t *j)
 		}
 
 		stat = checkduplicate_and_update(h.clt_nonce, h.xid, h.xid_rep, &b1, &sz1);
-		// jsl_log(JSL_DBG_4, "sz1=%d\n", sz1);
+		// jsl_log(dbcode::JSL_DBG_4, "sz1=%d\n", sz1);
 	}
 	else
 	{
@@ -547,7 +547,7 @@ void rpcs::dispatch(djob_t *j)
 		rep.pack_reply_header(rh);
 		rep.take_buf(&b1, &sz1);
 
-		jsl_log(JSL_DBG_2,
+		jsl_log(dbcode::JSL_DBG_2,
 				"rpcs::dispatch: sending and saving reply of size %d for rpc %u, proc %x ret %d, clt %u\n",
 				sz1, h.xid, proc, rh.ret, h.clt_nonce);
 
@@ -578,11 +578,11 @@ void rpcs::dispatch(djob_t *j)
 	case INPROGRESS: // server is working on this request
 		break;
 	case DONE: // duplicate and we still have the response
-		// jsl_log(JSL_DBG_4, "Buf size:-%ld, size:-%d\n", sizeof(b1) / sizeof(char), sz1);
+		// jsl_log(dbcode::JSL_DBG_4, "Buf size:-%ld, size:-%d\n", sizeof(b1) / sizeof(char), sz1);
 		c->send(b1, sz1);
 		break;
 	case FORGOTTEN: // very old request and we don't have the response anymore
-		jsl_log(JSL_DBG_2, "rpcs::dispatch: very old request %u from %u\n",
+		jsl_log(dbcode::JSL_DBG_2, "rpcs::dispatch: very old request %u from %u\n",
 				h.xid, h.clt_nonce);
 		rh.ret = rpc_const::atmostonce_failure;
 		rep.pack_reply_header(rh);
@@ -597,7 +597,7 @@ void rpcs::add_reply(unsigned int clt_nonce, unsigned int xid,
 {
 	ScopedLock rwl(&reply_window_m_);
 	// std::list<rpcs::reply_t> store = reply_window_[clt_nonce];
-	// jsl_log(JSL_DBG_4, "size:- %d\n", sz);
+	// jsl_log(dbcode::JSL_DBG_4, "size:- %d\n", sz);
 
 	std::list<rpcs::reply_t>::iterator it;
 	for (it = reply_window_[clt_nonce].begin(); it != reply_window_[clt_nonce].end(); it++)
@@ -606,7 +606,7 @@ void rpcs::add_reply(unsigned int clt_nonce, unsigned int xid,
 		{
 			it->buf = b;
 			it->sz = sz;
-			// jsl_log(JSL_DBG_4, "After setting the reply, size:- %d\n", it->sz);
+			// jsl_log(dbcode::JSL_DBG_4, "After setting the reply, size:- %d\n", it->sz);
 		}
 	}
 }
@@ -634,7 +634,7 @@ rpcs::checkduplicate_and_update(unsigned int clt_nonce, unsigned int xid,
 
 	ScopedLock rwl(&reply_window_m_);
 	// std::list<rpcs::reply_t> store = reply_window_[clt_nonce];
-	jsl_log(JSL_DBG_4, "[rpc][%d]clt_nonce.front().xid=%d, xid=%d, xid_rep=%d\n", clt_nonce, reply_window_[clt_nonce].front().xid, xid, xid_rep);
+	jsl_log(dbcode::JSL_DBG_4, "[rpc][%d]clt_nonce.front().xid=%d, xid=%d, xid_rep=%d\n", clt_nonce, reply_window_[clt_nonce].front().xid, xid, xid_rep);
 	if (xid < reply_window_[clt_nonce].front().xid)
 		return rpcs::rpcstate_t::FORGOTTEN;
 
@@ -661,7 +661,7 @@ rpcs::checkduplicate_and_update(unsigned int clt_nonce, unsigned int xid,
 		free(reply_window_[clt_nonce].front().buf);
 		reply_window_[clt_nonce].pop_front();
 	}
-	jsl_log(JSL_DBG_4, "[rpc]After compression, reply window size:-%ld\n", reply_window_[clt_nonce].size());
+	jsl_log(dbcode::JSL_DBG_4, "[rpc]After compression, reply window size:-%ld\n", reply_window_[clt_nonce].size());
 
 	std::list<rpcs::reply_t>::iterator it;
 	for (auto it = reply_window_[clt_nonce].begin(); it != reply_window_[clt_nonce].end(); it++)
@@ -675,23 +675,23 @@ rpcs::checkduplicate_and_update(unsigned int clt_nonce, unsigned int xid,
 		{
 			if (it->buf == NULL)
 			{
-				jsl_log(JSL_DBG_4, "[rpc]Buf is null, work in progress\n");
+				jsl_log(dbcode::JSL_DBG_4, "[rpc]Buf is null, work in progress\n");
 				return rpcs::rpcstate_t::INPROGRESS;
 			}
 			*b = it->buf;
 			*sz = it->sz;
-			jsl_log(JSL_DBG_4, "[rpc]Buf size:- %d, work is done\n", *sz);
+			jsl_log(dbcode::JSL_DBG_4, "[rpc]Buf size:- %d, work is done\n", *sz);
 			return rpcs::rpcstate_t::DONE;
 		}
 	}
-	jsl_log(JSL_DBG_4, "[rpc]After adding, reply window size:-%ld\n", reply_window_[clt_nonce].size());
+	jsl_log(dbcode::JSL_DBG_4, "[rpc]After adding, reply window size:-%ld\n", reply_window_[clt_nonce].size());
 	return rpcs::rpcstate_t::NEW;
 }
 
 // rpc handler
 int rpcs::rpcbind(int a, int &r)
 {
-	jsl_log(JSL_DBG_2, "rpcs::rpcbind called return nonce %u\n", nonce_);
+	jsl_log(dbcode::JSL_DBG_2, "rpcs::rpcbind called return nonce %u\n", nonce_);
 	r = nonce_;
 	return 0;
 }

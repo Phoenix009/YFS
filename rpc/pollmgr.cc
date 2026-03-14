@@ -235,7 +235,7 @@ SelectAIO::wait_ready(std::vector<int> *readable, std::vector<int> *writable)
 			return;
 		} else {
 			perror("select:");
-			jsl_log(JSL_DBG_OFF, "PollMgr::select_loop failure errno %d\n",errno);
+			jsl_log(dbcode::JSL_DBG_OFF, "PollMgr::select_loop failure errno %d\n",errno);
 			assert(0);
 		}
 	}

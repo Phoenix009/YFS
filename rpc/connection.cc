@@ -119,7 +119,7 @@ connection::send(char *b, int sz)
 
 	if (lossy_) {
 		if ((random()%100) < lossy_) {
-			jsl_log(JSL_DBG_1, "connection::send LOSSY TEST shutdown fd_ %d\n", fd_);
+			jsl_log(dbcode::JSL_DBG_1, "connection::send LOSSY TEST shutdown fd_ %d\n", fd_);
 			shutdown(fd_,SHUT_RDWR);
 		}
 	}
@@ -214,7 +214,7 @@ connection::writepdu()
 	int n = write(fd_, wpdu_.buf + wpdu_.solong, (wpdu_.sz-wpdu_.solong));
 	if (n < 0) {
 		if (errno != EAGAIN) {
-			jsl_log(JSL_DBG_1, "connection::writepdu fd_ %d failure errno=%d\n", fd_, errno);
+			jsl_log(dbcode::JSL_DBG_1, "connection::writepdu fd_ %d failure errno=%d\n", fd_, errno);
 			wpdu_.solong = -1;
 			wpdu_.sz = 0;
 		}
@@ -241,7 +241,7 @@ connection::readpdu()
 		}
 
 		if (n >0 && n!= sizeof(sz)) {
-			jsl_log(JSL_DBG_OFF, "connection::readpdu short read of sz\n");
+			jsl_log(dbcode::JSL_DBG_OFF, "connection::readpdu short read of sz\n");
 			return false;
 		}
 
@@ -249,7 +249,7 @@ connection::readpdu()
 
 		if (sz > MAX_PDU) {
 			char *tmpb = (char *)&sz1;
-			jsl_log(JSL_DBG_2, "connection::readpdu read pdu TOO BIG %d network order=%x %x %x %x %x\n", sz, 
+			jsl_log(dbcode::JSL_DBG_2, "connection::readpdu read pdu TOO BIG %d network order=%x %x %x %x %x\n", sz, 
 					sz1, tmpb[0],tmpb[1],tmpb[2],tmpb[3]);
 			return false;
 		}
@@ -343,7 +343,7 @@ tcpsconn::process_accept()
 		pthread_exit(NULL);
 	}
 
-	jsl_log(JSL_DBG_2, "accept_loop got connection fd=%d %s:%d\n", 
+	jsl_log(dbcode::JSL_DBG_2, "accept_loop got connection fd=%d %s:%d\n", 
 			s1, inet_ntoa(sin.sin_addr), ntohs(sin.sin_port));
 	connection *ch = new connection(mgr_, s1, lossy_);
 
@@ -351,7 +351,7 @@ tcpsconn::process_accept()
         std::map<int, connection *>::iterator i;
         for (i = conns_.begin(); i != conns_.end(); ) {
                 if (i->second->isdead() && i->second->ref() == 1) {
-			jsl_log(JSL_DBG_2, "accept_loop garbage collected fd=%d\n",
+			jsl_log(dbcode::JSL_DBG_2, "accept_loop garbage collected fd=%d\n",
 					i->second->channo());
                         i->second->decref();
                         conns_.erase(i++);
@@ -381,7 +381,7 @@ tcpsconn::accept_conn()
 				continue;
 			} else {
 				perror("accept_conn select:");
-				jsl_log(JSL_DBG_OFF, "tcpsconn::accept_conn failure errno %d\n",errno);
+				jsl_log(dbcode::JSL_DBG_OFF, "tcpsconn::accept_conn failure errno %d\n",errno);
 				assert(0);
 	                }
 		}
@@ -406,12 +406,12 @@ connect_to_dst(const sockaddr_in &dst, chanmgr *mgr, int lossy)
 	int yes = 1;
 	setsockopt(s, IPPROTO_TCP, TCP_NODELAY, &yes, sizeof(yes));
 	if(connect(s, (sockaddr*)&dst, sizeof(dst)) < 0) {
-		jsl_log(JSL_DBG_1, "rpcc::connect_to_dst failed to %s:%d\n", 
+		jsl_log(dbcode::JSL_DBG_1, "rpcc::connect_to_dst failed to %s:%d\n", 
 				inet_ntoa(dst.sin_addr), (int)ntohs(dst.sin_port));
 		close(s);
 		return NULL;
 	}
-	jsl_log(JSL_DBG_2, "connect_to_dst fd=%d to dst %s:%d\n",
+	jsl_log(dbcode::JSL_DBG_2, "connect_to_dst fd=%d to dst %s:%d\n",
 			s, inet_ntoa(dst.sin_addr), (int)ntohs(dst.sin_port));
 	return new connection(mgr, s, lossy);
 }

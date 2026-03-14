@@ -12,7 +12,7 @@
 #include <stdio.h>
 
 // must be >= 2
-int nt = 10; //XXX: lab1's rpc handlers are blocking. Since rpcs uses a thread pool of 10 threads, we cannot test more than 10 blocking rpc.
+const int nt = 10; //XXX: lab1's rpc handlers are blocking. Since rpcs uses a thread pool of 10 threads, we cannot test more than 10 blocking rpc.
 std::string dst;
 lock_client **lc = new lock_client * [nt];
 lock_protocol::lockid_t a = 1;

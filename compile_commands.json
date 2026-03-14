@@ -1,0 +1,21 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-g",
+      "-Wall",
+      "-I.",
+      "-I./rpc",
+      "-DLAB=1",
+      "-DSOL=1",
+      "-D_FILE_OFFSET_BITS=64",
+      "-c",
+      "-o",
+      "rpc/rpc.o",
+      "rpc/rpc.cc"
+    ],
+    "directory": "/Users/phoenix/projects/YFS",
+    "file": "/Users/phoenix/projects/YFS/rpc/rpc.cc",
+    "output": "/Users/phoenix/projects/YFS/rpc/rpc.o"
+  }
+]
